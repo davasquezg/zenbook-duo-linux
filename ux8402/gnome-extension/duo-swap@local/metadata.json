@@ -1,0 +1,7 @@
+{
+  "uuid": "duo-swap@local",
+  "name": "Zenbook Duo - Swap monitor",
+  "description": "Expone por D-Bus el movimiento de la ventana enfocada entre el panel principal y el ScreenPad Plus. Necesario porque Wayland no permite mover ventanas desde fuera del compositor.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "session-modes": ["user"]
+}
