@@ -10,6 +10,7 @@
  */
 
 import Gio from 'gi://Gio';
+import Meta from 'gi://Meta';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const BUS_NAME = 'org.zenbook.Duo';
@@ -54,14 +55,31 @@ export default class DuoSwapExtension extends Extension {
     _move(window, index) {
         // move_to_monitor no restaura el estado maximizado en el destino, así
         // que se desmaximiza y se vuelve a maximizar si procede.
-        const maximized = window.get_maximized();
-        if (maximized)
-            window.unmaximize(maximized);
+        //
+        // Mutter 18 (GNOME 49+) cambió la API: get_maximized() pasó a ser
+        // get_maximize_flags() y maximize()/unmaximize() ya no reciben flags
+        // (la maximización parcial se fija con set_maximize_flags). Se admiten
+        // ambas para no atar la extensión a una sola versión de GNOME.
+        const newApi = typeof window.get_maximize_flags === 'function';
+        const flags = newApi ? window.get_maximize_flags() : window.get_maximized();
+
+        if (flags) {
+            if (newApi)
+                window.unmaximize();
+            else
+                window.unmaximize(flags);
+        }
 
         window.move_to_monitor(index);
 
-        if (maximized)
-            window.maximize(maximized);
+        if (flags) {
+            if (!newApi)
+                window.maximize(flags);
+            else if (flags === Meta.MaximizeFlags.BOTH)
+                window.maximize();
+            else
+                window.set_maximize_flags(flags);
+        }
 
         window.activate(global.get_current_time());
         return true;
