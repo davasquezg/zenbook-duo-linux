@@ -190,10 +190,10 @@ CONF
 
 key:148   = menu        # KEY_PROG1 - Fn+F12, panel de control
 
-# Scancodes confirmados en un UX8402ZA con BIOS 306. Si en tu equipo están
-# cruzados, intercambia las dos acciones.
-scan:0x9C = screenpad   # apagar / encender el ScreenPad Plus
-scan:0x6A = swap        # mover la ventana enfocada al otro monitor
+# Scancodes confirmados en un UX8402ZA con BIOS 306. Si en tu equipo no
+# coinciden, vuelve a identificarlos con --scan.
+scan:0x6A = screenpad   # apagar / encender el ScreenPad Plus
+scan:0x9C = swap        # mover la ventana enfocada al otro monitor
 
 # KEY_TOUCHPAD_TOGGLE (530) también queda fuera del rango de XKB; si quieres
 # reutilizar esa tecla, descomenta:

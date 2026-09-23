@@ -79,8 +79,8 @@ DEFAULT_MAP = {
 # Confirmados por captura en un UX8402ZA (BIOS 306); ninguno de los dos figura
 # en el keymap de asus-nb-wmi, por eso ambos llegan como KEY_UNKNOWN (240).
 DEFAULT_SCAN_MAP = {
-    0x9C: "screenpad",
-    0x6A: "swap",
+    0x6A: "screenpad",   # apagar / encender el ScreenPad Plus
+    0x9C: "swap",        # intercambiar ventana entre panel principal e inferior
 }
 
 DEBOUNCE_SECONDS = 0.35

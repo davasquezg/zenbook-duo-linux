@@ -3,10 +3,10 @@
 Documento de continuidad. Recoge lo averiguado sobre el hardware, lo que ya está
 escrito, lo que falta y los comandos exactos para retomar.
 
-**Última actualización:** 2026-09-16
+**Última actualización:** 2026-09-23
 **Equipo:** ASUS `UX8402ZA` (Zenbook Pro 14 Duo OLED, 2022) · BIOS `UX8402ZA.306`
 **Sistema:** Ubuntu 26.04.1 · Kernel 7.0.0-31 · GNOME Shell 50.1 · Wayland
-**Repo:** `Fmstrat/zenbook-duo-linux`, rama `main-1`
+**Repo:** `davasquezg/zenbook-duo-linux` (fork de `Fmstrat/zenbook-duo-linux`), rama `main`
 
 ---
 
@@ -83,8 +83,8 @@ el **scancode crudo** que el driver emite en `EV_MSC`/`MSC_SCAN` justo antes del
 | Tecla | Emite | Scancode | ¿La ve GNOME? | Mapeo |
 |---|---|---|---|---|
 | Fn+F12 (ScreenXpert/MyASUS) | `KEY_PROG1` (148) | — | sí | `key:148` ✅ |
-| ScreenPad on/off | `KEY_UNKNOWN` (240) | **`0x9C`** | no | `scan:0x9C` ✅ |
-| Intercambio de ventanas | `KEY_UNKNOWN` (240) | **`0x6A`** | no | `scan:0x6A` ✅ |
+| ScreenPad on/off | `KEY_UNKNOWN` (240) | **`0x6A`** | no | `scan:0x6A` ✅ |
+| Intercambio de ventanas | `KEY_UNKNOWN` (240) | **`0x9C`** | no | `scan:0x9C` ✅ |
 | Toggle del touchpad | `KEY_TOUCHPAD_TOGGLE` (530) | — | no | `key:530`, libre |
 | Cámara / micrófono | 212 / 248 | — | sí | ya gestionadas por GNOME |
 
@@ -97,9 +97,9 @@ Dos observaciones sobre esta captura:
   diagnóstico de §3.2. Son valores de un UX8402ZA con BIOS 306 y podrían variar
   con otras versiones de firmware.
 
-**Reserva pendiente:** la correspondencia scancode→tecla se dedujo del *orden de
-pulsación* durante la captura, no de una confirmación explícita. Si al probar
-resultan cruzados, basta con intercambiar las dos acciones en `keys.conf`.
+**Correspondencia verificada (2026-09-23):** la primera asignación, deducida del
+orden de pulsación durante la captura, estaba cruzada. Confirmado pulsando cada
+tecla por separado: `0x6A` = ScreenPad on/off, `0x9C` = intercambio de ventanas.
 
 ---
 
@@ -164,8 +164,8 @@ abreviada, la precedencia del scancode y la desactivación con acción vacía.
 ### Mapeo de teclas — cerrado
 
 `~/.config/zenbook-duo/keys.conf` ya está escrito con los tres códigos
-confirmados. Queda solo verificar que `0x9C` y `0x6A` no estén cruzados (ver la
-reserva en §3.3). Para reidentificar una tecla en cualquier momento:
+confirmados y la correspondencia verificada (§3.3). Para reidentificar una
+tecla en cualquier momento:
 
 ```bash
 sudo ./ux8402/duo-keys.py --scan
@@ -211,6 +211,7 @@ usuario y la extensión. **Requiere cerrar sesión y volver a entrar.**
 
 ## 7. Estado de git
 
-Rama `main-1`, cuatro commits heredados del upstream. **Los archivos nuevos
-(`ANALISIS-UX8402ZA.md`, `ux8402/`) están sin commitear.** El `duo.sh` y
-`setup.sh` originales se han dejado intactos como referencia.
+Todo el trabajo está en `main` (rama única): cuatro commits heredados del
+upstream, `7499739` —que añade `ANALISIS-UX8402ZA.md` y `ux8402/`, integrado vía
+PR #1— y la corrección de scancodes. El `duo.sh` y `setup.sh` originales se han
+dejado intactos como referencia.

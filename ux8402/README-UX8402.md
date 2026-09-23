@@ -59,8 +59,8 @@ Estado en este equipo, según captura real:
 | Tecla | Emite | Scancode | Utilizable en GNOME | Cómo se mapea |
 |---|---|---|---|---|
 | Fn+F12 (ScreenXpert/MyASUS) | `KEY_PROG1` (148) | — | Sí | `key:148` |
-| ScreenPad on/off | `KEY_UNKNOWN` (240) | `0x9C` | No | `scan:0x9C` |
-| Intercambio de ventanas | `KEY_UNKNOWN` (240) | `0x6A` | No | `scan:0x6A` |
+| ScreenPad on/off | `KEY_UNKNOWN` (240) | `0x6A` | No | `scan:0x6A` |
+| Intercambio de ventanas | `KEY_UNKNOWN` (240) | `0x9C` | No | `scan:0x9C` |
 | Toggle del touchpad | `KEY_TOUCHPAD_TOGGLE` (530) | `—` | No | `key:530` |
 | Cámara / micrófono | `KEY_CAMERA` (212), `KEY_MICMUTE` (248) | — | Sí | ya gestionadas por GNOME |
 
@@ -87,8 +87,8 @@ y la línea exacta que hay que copiar en `~/.config/zenbook-duo/keys.conf`:
 
 ```ini
 key:148   = menu        # por keycode evdev
-scan:0x9C = screenpad   # por scancode crudo (para las KEY_UNKNOWN)
-scan:0x6A = swap
+scan:0x6A = screenpad   # por scancode crudo (para las KEY_UNKNOWN)
+scan:0x9C = swap
 148       = menu        # forma abreviada, equivale a key:148
 ```
 
@@ -108,8 +108,8 @@ usando los scancodes obtenidos con `--scan`:
 
 ```
 evdev:name:Asus WMI hotkeys:*
- KEYBOARD_KEY_9c=f20
- KEYBOARD_KEY_6a=f21
+ KEYBOARD_KEY_6a=f20
+ KEYBOARD_KEY_9c=f21
 ```
 
 Seguido de `sudo systemd-hwdb update && sudo udevadm trigger`. Elegir teclas
@@ -154,9 +154,6 @@ Registro: `$XDG_RUNTIME_DIR/zenbook-duo/duo.log`
 
 ## Pendiente de validación
 
-- Cuál de los dos scancodes (`0x9C` / `0x6A`) corresponde a cada tecla: la
-  asignación actual refleja el orden de pulsación durante la captura. Si están
-  cruzados, basta con intercambiar las dos acciones en `keys.conf`.
 - Comportamiento de `bl_power` en el firmware 306: actualmente reporta `1`
   (apagado) con el panel visible, por lo que el valor puede no reflejar el
   estado real. Si el toggle no apaga físicamente el panel, `duo-ux8402.sh`
