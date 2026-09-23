@@ -3,13 +3,16 @@
 # Evita las entradas NOPASSWD en /etc/sudoers que instala el setup.sh original
 # (que además apuntaban a un script en /tmp, ruta escribible por el usuario).
 # El usuario debe pertenecer al grupo 'video'.
+#
+# Se atiende también 'change' porque es la acción que emite 'udevadm trigger' por
+# defecto: con solo 'add' la regla no se aplicaría hasta el siguiente arranque.
 
 # Backlight del ScreenPad Plus: nivel y encendido/apagado
-ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="asus_screenpad", \
+ACTION=="add|change", SUBSYSTEM=="backlight", KERNEL=="asus_screenpad", \
   RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power", \
   RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"
 
 # Backlight del teclado integrado
-ACTION=="add", SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
+ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
   RUN+="/bin/chgrp video /sys/class/leds/%k/brightness", \
   RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"

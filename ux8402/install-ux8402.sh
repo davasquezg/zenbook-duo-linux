@@ -101,7 +101,7 @@ install_udev() {
             relogin=true
         fi
     done
-    ${relogin} && warn "Se han añadido grupos nuevos: cierra la sesión y vuelve a entrar."
+    ${relogin} && warn "Se han añadido grupos nuevos: reinicia el equipo al terminar."
     return 0
 }
 
@@ -215,6 +215,14 @@ uninstall() {
     say "Hecho. La configuración en ${CONF_DIR} se conserva."
 }
 
+# Todo lo que depende del usuario (grupos, ~/.config, servicio de usuario,
+# extensión GNOME) usa $USER y $HOME; bajo sudo apuntarían a root.
+if ((EUID == 0)); then
+    echo "No ejecutes este instalador con sudo: hazlo como tu usuario." >&2
+    echo "Pedirá la contraseña solo para los pasos que la necesitan." >&2
+    exit 1
+fi
+
 case "${1:-}" in
 --uninstall) uninstall; exit 0 ;;
 --purge-old) purge_old; exit 0 ;;
@@ -238,5 +246,6 @@ echo "  Alternar ScreenPad: duo screenpad toggle"
 echo "  Identificar teclas: ${LIB_DIR}/duo-keys.py --scan"
 echo "  Registro         : \${XDG_RUNTIME_DIR}/zenbook-duo/duo.log"
 echo
-warn "Cierra la sesión y vuelve a entrar para que surtan efecto los grupos"
-warn "'video' e 'input' y para que cargue la extensión de GNOME."
+warn "Reinicia el equipo para que surtan efecto los grupos 'video' e 'input'"
+warn "y para que cargue la extensión de GNOME. Cerrar sesión no basta: el"
+warn "gestor systemd --user sobrevive al cierre y conserva los grupos antiguos."

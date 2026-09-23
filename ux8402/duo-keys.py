@@ -181,7 +181,7 @@ def open_devices():
             log(f"escuchando {name} en {path}")
         except PermissionError:
             log(f"ERROR - sin permiso sobre {path}: añade tu usuario al grupo 'input' "
-                f"(sudo usermod -aG input $USER) y vuelve a iniciar sesión")
+                f"(sudo usermod -aG input $USER) y reinicia el equipo")
         except OSError as exc:
             log(f"ERROR - no se puede abrir {path}: {exc}")
     return fds
