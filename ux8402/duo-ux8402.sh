@@ -110,11 +110,17 @@ sp_sanitize() {
     fi
 }
 
-# ¿Está encendido el ScreenPad? bl_power: 0 = encendido, 1 = apagado
+# bl_power en asus_screenpad NO sigue la convención del kernel (0 = encendido):
+# el driver asus-wmi pasa el valor crudo del firmware, de modo que
+#   1 = panel alimentado    0 = alimentación cortada
+# (update_screenpad_bl_status: `if (bd->props.power)` enciende). Con el panel
+# sin alimentación, actual_brightness devuelve el último nivel guardado, así que
+# el estado se decide solo por bl_power.
+SP_POWER_ON=1
+SP_POWER_OFF=0
+
 sp_is_on() {
-    local p
-    p=$(cat "${SP_DIR}/bl_power" 2>/dev/null || echo 0)
-    [ "${p}" = "0" ] && (( $(sp_current) > 0 ))
+    [ "$(cat "${SP_DIR}/bl_power" 2>/dev/null)" = "${SP_POWER_ON}" ]
 }
 
 duo_screenpad() {
@@ -130,15 +136,16 @@ duo_screenpad() {
         # Se guarda el nivel para poder restaurarlo
         local cur; cur=$(sp_current)
         (( cur > 0 )) && state_set SP_LAST "${cur}"
-        sysfs_write "${SP_DIR}/brightness" 0
-        sysfs_write "${SP_DIR}/bl_power" 1
+        # Corta la alimentación: DP-1 se desconecta y GNOME lo retira; al
+        # volver, mutter restaura su configuración desde monitors.xml.
+        sysfs_write "${SP_DIR}/bl_power" "${SP_POWER_OFF}"
         log "SCREENPAD - apagado (nivel guardado: ${cur})"
         notify "ScreenPad apagado"
         ;;
     on)
         local last; last=$(state_get SP_LAST || echo "")
         [[ "${last}" =~ ^[0-9]+$ ]] && (( last > 0 )) || last=$(( $(sp_max) * 60 / 100 ))
-        sysfs_write "${SP_DIR}/bl_power" 0
+        sysfs_write "${SP_DIR}/bl_power" "${SP_POWER_ON}"
         sysfs_write "${SP_DIR}/brightness" "${last}"
         log "SCREENPAD - encendido (nivel ${last})"
         notify "ScreenPad encendido"
@@ -151,7 +158,7 @@ duo_screenpad() {
         if [[ "${action}" =~ ^[0-9]+$ ]]; then
             local max; max=$(sp_max)
             (( action > max )) && action=${max}
-            sysfs_write "${SP_DIR}/bl_power" 0
+            sysfs_write "${SP_DIR}/bl_power" "${SP_POWER_ON}"
             sysfs_write "${SP_DIR}/brightness" "${action}"
             log "SCREENPAD - brillo = ${action}"
         else
