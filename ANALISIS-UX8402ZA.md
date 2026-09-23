@@ -180,6 +180,10 @@ Restaurar nivel en boot y tras resume. GNOME ya gestiona Fn+F3/F4.
 echo 1 > /sys/class/backlight/asus_screenpad/bl_power   # apagar (FB_BLANK_POWERDOWN)
 echo 0 > /sys/class/backlight/asus_screenpad/bl_power   # encender
 ```
+> **Corrección (2026-09-23):** en `asus_screenpad` la semántica es la inversa
+> (`1` = encendido, `0` = corta la alimentación) y `DP-1` se desconecta mientras
+> está apagado. Ver `ux8402/HALLAZGOS.md` §3.4.
+
 Ventaja frente a `gdctl set`: **no altera escalas, posiciones, HDR ni modos**, y es instantáneo.
 Complementar con `brightness` para el nivel.
 

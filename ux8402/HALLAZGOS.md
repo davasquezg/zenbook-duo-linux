@@ -37,7 +37,7 @@ DRM          card1-eDP-1  SDC 0x416d  2880x1800@120  principal, HDR (colormode b
              card1-DP-1   BOE 0x0a8d  2880x864@120   ScreenPad Plus
 
 Backlight    intel_backlight   max=400   -> eDP-1
-             asus_screenpad    max=255   -> DP-1   (bl_power: 0=on, 1=off)
+             asus_screenpad    max=255   -> DP-1   (bl_power: 1=on, 0=off — invertido, ver §3.4)
 
 LEDs         asus::kbd_backlight  max=3
 
@@ -101,6 +101,32 @@ Dos observaciones sobre esta captura:
 orden de pulsación durante la captura, estaba cruzada. Confirmado pulsando cada
 tecla por separado: `0x6A` = ScreenPad on/off, `0x9C` = intercambio de ventanas.
 
+### 3.4 `bl_power` invertido en `asus_screenpad` (verificado 2026-09-23)
+
+El driver `asus-wmi` no sigue la convención del kernel para `bl_power`
+(0 = encendido). Pasa el valor crudo del firmware:
+
+```c
+/* update_screenpad_bl_status() */
+if (bd->props.power)   -> SCREENPAD_POWER=1 + SCREENPAD_LIGHT=brillo   // enciende
+if (!bd->props.power)  -> SCREENPAD_POWER=0                            // corta
+/* asus_screenpad_init() */
+bd->props.power = power;   // 1 = alimentado
+```
+
+Por eso arranca con `bl_power=1` y el panel encendido: no es un estado
+incoherente. Consecuencias observadas:
+
+- `bl_power=0` **corta la alimentación**: `DP-1` pasa a `disconnected` y GNOME
+  retira el monitor. Al volver a `1`, el enlace se recupera solo y mutter
+  restaura escala (1.5) y posición (0,1080) desde `monitors.xml`. No hace falta
+  `echo detect` sobre el conector (no tiene efecto con el panel sin corriente).
+- Con el panel sin alimentación, `actual_brightness` devuelve el último nivel
+  guardado, de modo que el estado solo puede deducirse de `bl_power`.
+- La primera versión del script usaba la semántica estándar, así que "apagar"
+  dejaba el panel alimentado a brillo 0 y "encender" le cortaba la corriente:
+  la tecla apagaba la pantalla pero nunca la volvía a encender.
+
 ---
 
 ## 4. Defectos activos del script upstream
@@ -144,12 +170,18 @@ ux8402/
 
 Decisiones de diseño y su motivo:
 
-- **`bl_power` en lugar de `gdctl`** para encender/apagar el ScreenPad: no toca
-  la topología, así que conserva escalas, HDR y 120 Hz.
+- **`bl_power` en lugar de `gdctl`** para encender/apagar el ScreenPad: corta
+  la alimentación del panel y deja que mutter retire y restaure `DP-1` con su
+  configuración guardada, sin forzar escalas ni modos como `gdctl set`.
+  Semántica invertida: ver §3.4.
 - **Extensión GNOME para el intercambio de ventanas:** bajo Wayland ningún
   proceso externo puede mover una ventana. Verificado:
   `org.gnome.Shell.Introspect.GetWindows` devuelve `AccessDenied` y `Eval` está
   deshabilitado. La extensión expone `org.zenbook.Duo.SwapMonitor`.
+  En Mutter 18 (GNOME 49+) `Meta.Window.get_maximized()` ya no existe
+  (ahora `get_maximize_flags()`, y `maximize()`/`unmaximize()` sin argumentos);
+  la extensión admite ambas API. Verificado por introspección del typelib
+  `Meta-18` el 2026-09-23.
 - **udev + grupo `video`** en lugar de entradas en `sudoers`.
 - **Grupo `input`** para leer `event18`, imprescindible por §3.
 
@@ -180,14 +212,14 @@ cd ux8402 && ./install-ux8402.sh
 Retira lo anterior (servicios, gancho de suspensión, entradas de `sudoers` con
 copia de seguridad y `visudo -c`), instala en `/usr/local/lib/zenbook-duo/`,
 crea la regla udev, añade a los grupos `video` e `input`, registra el servicio de
-usuario y la extensión. **Requiere cerrar sesión y volver a entrar.**
+usuario y la extensión. **Requiere reiniciar**: cerrar sesión no basta, porque `systemd --user`
+(que lanza GNOME y el servicio) sobrevive al cierre y conserva los grupos
+antiguos. Comprobado el 2026-09-23.
 
 ### Verificaciones tras instalar
 
-- **`bl_power`**: hoy reporta `1` (apagado) con el panel visible, así que el
-  valor puede no reflejar el estado real en el firmware 306. Comprobar si
-  `duo screenpad toggle` apaga físicamente el panel; si no, el script ya lleva
-  el brillo a 0 como respaldo.
+- ~~`bl_power`~~: resuelto, la semántica está invertida (§3.4). Toggle
+  verificado: apaga, vuelve a encender y restaura escala y posición.
 - **Extensión**: `gnome-extensions list --enabled | grep duo-swap` y probar
   `duo swap` con una ventana enfocada.
 - **Mapeo táctil de `ELAN9009`** (touch y lápiz del ScreenPad) sobre `DP-1`:

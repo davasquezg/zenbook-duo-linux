@@ -13,11 +13,17 @@ cd ux8402
 ./install-ux8402.sh
 ```
 
+Ejecútalo **como tu usuario, sin `sudo`**: pide la contraseña solo en los pasos
+que la necesitan, y bajo `sudo` los grupos, la configuración y el servicio de
+usuario quedarían asignados a root.
+
 El instalador retira primero la instalación anterior (servicios, gancho de
 suspensión y las entradas `NOPASSWD` de `/etc/sudoers`, de las cuales una
-concedía root sobre un script en `/tmp`). Al terminar hay que **cerrar sesión y
-volver a entrar** para que apliquen los grupos `video` e `input` y para que
-GNOME cargue la extensión.
+concedía root sobre un script en `/tmp`). Al terminar hay que **reiniciar el equipo** para que
+apliquen los grupos `video` e `input` y para que GNOME cargue la extensión.
+Cerrar sesión no basta: el gestor `systemd --user`, que lanza tanto GNOME como
+este servicio, suele sobrevivir al cierre de sesión y conserva los grupos
+antiguos.
 
 Desinstalar: `./install-ux8402.sh --uninstall`
 
@@ -25,7 +31,7 @@ Desinstalar: `./install-ux8402.sh --uninstall`
 
 | Función | Mecanismo |
 |---|---|
-| Encender/apagar el ScreenPad Plus | `asus_screenpad/bl_power` — no toca la topología de pantallas, así que conserva escalas, HDR y 120 Hz |
+| Encender/apagar el ScreenPad Plus | `asus_screenpad/bl_power` — corta la alimentación del panel; GNOME retira `DP-1` y al encender lo restaura con su escala y posición guardadas. En este driver `1` = encendido y `0` = apagado, al revés de la convención del kernel |
 | Brillo del ScreenPad | `asus_screenpad/brightness` (0-255) |
 | Sincronía de brillo principal → ScreenPad | `inotify` sobre `intel_backlight` con reescalado 0-400 → 0-255 y atenuación configurable |
 | Backlight del teclado | `asus::kbd_backlight` (0-3), restaurado en arranque y al despertar |
@@ -154,8 +160,4 @@ Registro: `$XDG_RUNTIME_DIR/zenbook-duo/duo.log`
 
 ## Pendiente de validación
 
-- Comportamiento de `bl_power` en el firmware 306: actualmente reporta `1`
-  (apagado) con el panel visible, por lo que el valor puede no reflejar el
-  estado real. Si el toggle no apaga físicamente el panel, `duo-ux8402.sh`
-  igualmente lleva el brillo a 0.
 - Mapeo táctil de `ELAN9009` (touch y lápiz del ScreenPad) sobre `DP-1`.
